@@ -3,26 +3,33 @@
 #ifndef COMMANDS_H_
 #define COMMANDS_H_
 
+#include <stdio.h>
+#include <stdlib.h>
 #include<iostream>
 #include <string.h>
+#include <string>
 #include <fstream>
 #include <vector>
 #include "HybridAnomalyDetector.h"
 #include <bits/stdc++.h>
 #include <algorithm>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <thread>
+
 
 class DefaultIO{
 public:
 	virtual std::string read()=0;
-	virtual void write(std::string text)=0;
-	virtual void write(float f)=0;
-	virtual void read(float* f)=0;
+	virtual void write(std::string text) = 0;
+	virtual void write(float f) = 0;
+	virtual void read(float* f) = 0;
 	virtual ~DefaultIO() = default;
 };
 
-// doesnt matter for MainTrain because
-// MainTrain is talking with CLI with a unique IO
-/*class StandartIO : public DefaultIO {
+/*
+class StandartIO : public DefaultIO {
 public:
     std::string read() {
         std::string s;
@@ -38,13 +45,39 @@ public:
     void write(float f) {
         std::cout << f;
     }
-};*/
+};
+ */
 
+class SocketIO: public DefaultIO {
+    int clientID;
+public:
+    SocketIO(int cliID) {
+        clientID = cliID;
+    }
+    virtual void write(std::string s) {
+        send(clientID, s.c_str(), s.length(), 0);
+    }
+    virtual void write(float f) {
+        std:: string s = std::to_string(f);
+        send(clientID, s.c_str(), sizeof(float), 0);
+    }
+    virtual void read(float* f) {
 
-/*class SocketIO: public DefaultIO {
-
-};*/
-
+    }
+    virtual std::string read() {
+        char c;
+        std::string inputFromClient = "";
+        recv(clientID, &c, sizeof(char), 0);
+        while (true) {
+            if(c == '\n') {
+                break;
+            }
+            inputFromClient += c;
+            recv(clientID, &c, sizeof(char), 0);
+        }
+        return inputFromClient;
+    }
+};
 
 class Command{
 protected:
@@ -277,12 +310,22 @@ public:
         truePositiveRate = std::floor(truePositiveRate * 1000) / 1000;
         falsePositiveRate = std::floor(falsePositiveRate * 1000) / 1000;
 
+        std::string TPrate = std::to_string(truePositiveRate);
+        size_t indexOfDot = TPrate.find(".");
+        TPrate = TPrate.substr(0, indexOfDot + 4);
+        TPrate.erase(TPrate.find_last_not_of('0') + 1, std::string::npos);
+
+        std::string FPrate = std::to_string(falsePositiveRate);
+        indexOfDot = FPrate.find(".");
+        FPrate = FPrate.substr(0, indexOfDot + 4);
+        FPrate.erase(FPrate.find_last_not_of('0') + 1, std::string::npos);
+
         dio->write("True Positive Rate: ");
-        dio->write(truePositiveRate);
+        dio->write(TPrate);
         dio->write("\n");
 
         dio->write("False Positive Rate: ");
-        dio->write(falsePositiveRate);
+        dio->write(FPrate);
         dio->write("\n");
     }
 };

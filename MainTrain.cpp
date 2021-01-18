@@ -1,9 +1,3 @@
-/*
- * run2.cpp
- *
- *  Created on: 8 בדצמ× 2019
- *      Author: Eli
- */
 
 #include <iostream>
 #include <fstream>
@@ -19,9 +13,6 @@
 #include <unistd.h>
 #include <time.h>
 #include "Server.h"
-
-
-
 
 using namespace std;
 

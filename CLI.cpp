@@ -26,7 +26,6 @@ void CLI::printCommands() {
 }
 
 void CLI::start(){
-    bool isRunning = true;
     std::string str;
     int chosenNum = 0;
     std::string s;
